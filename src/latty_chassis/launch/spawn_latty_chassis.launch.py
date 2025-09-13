@@ -10,6 +10,7 @@ import rclpy
 from rclpy.node import Node as RclNode
 from gazebo_msgs.srv import DeleteEntity
 
+
 def delete_entity(name: str):
     rclpy.init()
     node = RclNode('delete_entity_launcher')
@@ -89,7 +90,7 @@ def generate_launch_description():
 
     # Spawn robot after 5 seconds if model exists
     spawn_robot = TimerAction(
-        period=3.0,
+        period=5.0,
         actions=[OpaqueFunction(function=spawn_robot_if_model_exists, kwargs={'env': env})]
     )
 
