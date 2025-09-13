@@ -1,130 +1,174 @@
 <?xml version="1.0" ?>
-<sdf version="1.6">
+<sdf version="1.7">
+
   <model name="latty_chassis">
-    <static>false</static> <!-- must be false for drive plugin control -->
+    <pose>0 0 0 0 0 0</pose>
+    <static>false</static>
 
-    <!-- Base link -->
-    <link name="base_link">
-      <pose>0 0 0.2 0 0 0</pose> <!-- slightly above ground -->
-
+    <!-- Chassis link -->
+    <link name="chassis">
+      <pose>0 0 0.1 0 0 0</pose> <!-- lifted to sit on wheels -->
+      <collision name="collision">
+        <geometry>
+          <box><size>0.4 0.2 0.1</size></box>
+        </geometry>
+      </collision>
       <visual name="visual">
         <geometry>
-          <box>
-            <size>0.6 1.0 0.4</size>
-          </box>
+          <box><size>0.4 0.2 0.1</size></box>
         </geometry>
         <material>
-          <ambient>0.1 0.1 0.8 1</ambient>
-          <diffuse>0.1 0.1 0.8 1</diffuse>
+          <ambient>1.0 0.827 0.0 1</ambient>
+          <diffuse>1.0 0.827 0.0 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
         </material>
       </visual>
+      <inertial>
+        <mass>10.0</mass>
+        <inertia>
+          <ixx>0.5</ixx>
+          <iyy>1.0</iyy>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
 
-      <collision name="collision">
+      <collision name='caster_collision'>
+        <pose>-0.15 0 -0.05 0 0 0</pose>
         <geometry>
-          <box>
-            <size>0.6 1.0 0.4</size>
-          </box>
+          <sphere>
+            <radius>.05</radius>
+          </sphere>
         </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0</mu>
+              <mu2>0</mu2>
+              <slip1>1.0</slip1>
+              <slip2>1.0</slip2>
+            </ode>
+          </friction>
+        </surface>
       </collision>
+      <visual name='caster_visual'>
+      <pose>-0.15 0 -0.05 0 0 0</pose>
+      <geometry>
+      <sphere>
+      <radius>.05</radius>
+      </sphere>
+      </geometry>
+      </visual>
     </link>
 
-    <!-- Left wheel -->
-    <link name="left_wheel_link">
-      <pose>0.3 0.25 0.1 0 0 0</pose>
-
+    <!-- Left Wheel Link -->
+    <link name="Left_Wheel">
+      <pose>0.1 0.13 0.1 0 1.5707 1.5707</pose> <!-- wheel center at z = radius -->
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <length>0.06</length>
+            <radius>0.1</radius>
+          </cylinder>
+        </geometry>
+      </collision>
       <visual name="visual">
         <geometry>
           <cylinder>
-            <radius>0.075</radius>
-            <length>0.05</length>
+            <length>0.06</length>
+            <radius>0.1</radius>
           </cylinder>
         </geometry>
+        <material>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.05 0.05 0.05 1</diffuse>
+        </material>
       </visual>
+      <inertial>
+        <mass>2.0</mass>
+      </inertial>
+    </link>
 
+    <!-- Right Wheel Link -->
+    <link name="Right_Wheel">
+      <pose>0.1 -0.13 0.1 0 1.5707 1.5707</pose>
       <collision name="collision">
         <geometry>
           <cylinder>
-            <radius>0.075</radius>
-            <length>0.05</length>
+            <length>0.06</length>
+            <radius>0.1</radius>
           </cylinder>
         </geometry>
       </collision>
-    </link>
-
-    <!-- Right wheel -->
-    <link name="right_wheel_link">
-      <pose>0.3 -0.25 0.1 0 0 0</pose>
-
       <visual name="visual">
         <geometry>
           <cylinder>
-            <radius>0.075</radius>
-            <length>0.05</length>
+            <length>0.06</length>
+            <radius>0.1</radius>
           </cylinder>
         </geometry>
+        <material>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.05 0.05 0.05 1</diffuse>
+        </material>
       </visual>
-
-      <collision name="collision">
-        <geometry>
-          <cylinder>
-            <radius>0.075</radius>
-            <length>0.05</length>
-          </cylinder>
-        </geometry>
-      </collision>
+      <inertial>
+        <mass>2.0</mass>
+      </inertial>
     </link>
 
     <!-- Left wheel joint -->
     <joint name="left_wheel_joint" type="revolute">
-      <parent>base_link</parent>
-      <child>left_wheel_link</child>
-      <pose>0 0 0 0 0 0</pose>
+      <parent>chassis</parent>
+      <child>Left_Wheel</child>
+      <pose>0 0 -0.03 0 0 0</pose>
       <axis>
-        <xyz>0 1 0</xyz>
+        <xyz>0 0 1</xyz>
         <limit>
-          <lower>-1000</lower>
-          <upper>1000</upper>
+          <effort>5</effort>
+          <velocity>10</velocity>
         </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
       </axis>
     </joint>
 
     <!-- Right wheel joint -->
     <joint name="right_wheel_joint" type="revolute">
-      <parent>base_link</parent>
-      <child>right_wheel_link</child>
-      <pose>0 0 0 0 0 0</pose>
+      <parent>chassis</parent>
+      <child>Right_Wheel</child>
+      <pose>0 0 0.03 0 0 0</pose>
       <axis>
-        <xyz>0 1 0</xyz>
+        <xyz>0 0 1</xyz>
         <limit>
-          <lower>-1000</lower>
-          <upper>1000</upper>
+          <effort>5</effort>
+          <velocity>10</velocity>
         </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
       </axis>
     </joint>
 
-    <!-- Differential Drive Plugin -->
-    <gazebo>
-      <plugin name="diff_drive_controller" filename="libgazebo_ros_diff_drive.so">
-        <ros>
-          <namespace>/latty_chassis</namespace>
-          <remapping>cmd_vel:=cmd_vel</remapping>
-        </ros>
-        <update_rate>100</update_rate>
-
-        <left_joint>left_wheel_joint</left_joint>
-        <right_joint>right_wheel_joint</right_joint>
-
-        <wheel_separation>0.5</wheel_separation> <!-- Distance between wheels -->
-        <wheel_diameter>0.15</wheel_diameter>     <!-- Wheel diameter -->
-
-        <command_topic>cmd_vel</command_topic>
-        <odometry_topic>odom</odometry_topic>
-        <publish_odom>true</publish_odom>
-        <publish_odom_tf>true</publish_odom_tf>
-        <publish_wheel_tf>true</publish_wheel_tf>
-        <publish_wheel_joint_state>true</publish_wheel_joint_state>
-      </plugin>
-    </gazebo>
+    <!-- Diff Drive Plugin -->
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/latty</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.34</wheel_separation>  <!-- distance between wheels -->
+      <wheel_diameter>0.14</wheel_diameter>
+      <odom_frame>odom</odom_frame>
+      <base_frame>chassis</base_frame>
+      <publish_odom>true</publish_odom>
+      <publish_tf>true</publish_tf>
+      <update_rate>50</update_rate>
+    </plugin>
 
   </model>
 </sdf>

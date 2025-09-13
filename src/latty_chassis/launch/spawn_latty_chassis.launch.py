@@ -30,21 +30,28 @@ def delete_entity(name: str):
     rclpy.shutdown()
 
 def spawn_robot_if_model_exists(context, *args, **kwargs):
+    
     env = kwargs.get('env', os.environ.copy())
-    model_file = os.path.expanduser('~/.gazebo/gazebo_models/warehouse_robot/model.sdf')
+
+    # Resolve package share directory
+    pkg_share = get_package_share_directory('latty_chassis')
+    model_file = os.path.join(pkg_share, 'models', 'latty_chassis_model', 'latty_model.sdf')
+    
+    print(f"[INFO] Using model file: {model_file}") 
+
     if not pathlib.Path(model_file).exists():
         print(f"[ERROR] Model file does not exist: {model_file}", file=sys.stderr)
         return []
 
     # Delete existing robot
-    delete_entity('warehouse_robot')
+    delete_entity('latty_chassis')
 
     # Spawn robot
     return [
         Node(
             package='gazebo_ros',
             executable='spawn_entity.py',
-            arguments=['-entity', 'warehouse_robot', '-file', model_file],
+            arguments=['-entity', 'latty_chassis', '-file', model_file],
             output='screen',
             env=env
         )
@@ -57,7 +64,7 @@ def generate_launch_description():
     # Set Gazebo model path
     gazebo_model_path = os.path.expanduser("~/.gazebo/gazebo_models")
     env = os.environ.copy()
-    env['GAZEBO_MODEL_PATH'] = env.get('GAZEBO_MODEL_PATH', '') + ':' + gazebo_model_path
+    env['GAZEBO_MODEL_PATH'] = env.get('GAZEBO_MODEL_PATH', '') + ':' + gazebo_model_path  + ':' + os.path.join(pkg_share, 'models')
 
     # Launch Gazebo server (paused)
     gzserver = ExecuteProcess(

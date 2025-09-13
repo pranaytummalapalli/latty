@@ -16,8 +16,8 @@
   <depend>gazebo_msgs</depend>
   <depend>geometry_msgs</depend>
 
-
   <export>
+    <gazebo_ros gazebo_model_path="${prefix}/share/latty_chassis/models"/>
     <build_type>ament_cmake</build_type>
   </export>
 </package>
