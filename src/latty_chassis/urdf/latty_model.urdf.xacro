@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="latty_chassis">
+
+  <!-- Parameters -->
+  <xacro:property name="wheel_radius" value="0.1"/>
+  <xacro:property name="wheel_length" value="0.06"/>
+  <xacro:property name="wheelbase" value="0.34"/>
+
+  <!-- Chassis -->
+  <link name="chassis">
+
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="10.0"/>
+      <inertia ixx="0.5" iyy="1.0" izz="0.1" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.4 0.2 0.1"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.4 0.2 0.1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Knuckle -->
+  <link name="steer_knuckle">
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.03 0.03 0.04"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.03 0.06"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <!-- Wheels -->
+  <link name="left_wheel">
+
+    <inertial>
+      <mass value="2.0"/>
+      <inertia ixx="0.0056" iyy="0.0056" izz="0.01" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <link name="right_wheel">
+    
+    <inertial>
+      <mass value="2.0"/>
+      <inertia ixx="0.0056" iyy="0.0056" izz="0.01" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+    
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <!-- Gazebo material overrides -->
+  <gazebo reference="chassis">
+    <material>Gazebo/Yellow</material>
+  </gazebo>
+
+  <gazebo reference="left_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <gazebo reference="steer_knuckle">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <!-- Joints -->
+  <joint name="front_steer_joint" type="revolute">
+    <parent link="chassis"/>
+    <child link="steer_knuckle"/>
+    <origin xyz="-0.15 0 0.03" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.785" upper="0.785" effort="10" velocity="3"/>
+    <dynamics damping="0.5"/>
+  </joint>
+
+  <joint name="left_wheel_joint" type="revolute">
+    <parent link="chassis"/>
+    <child link="left_wheel"/>
+    <origin xyz="0.1 0.13 ${wheel_radius}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="5" velocity="10"/>
+    <dynamics damping="0.1" friction="0.01"/>
+  </joint>
+
+  <joint name="right_wheel_joint" type="revolute">
+    <parent link="chassis"/>
+    <child link="right_wheel"/>
+    <origin xyz="0.1 -0.13 ${wheel_radius}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="5" velocity="10"/>
+    <dynamics damping="0.1" friction="0.01"/>
+  </joint>
+
+  <!-- ros2_control hardware definition -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+
+    <joint name="front_steer_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      <parameters>/home/pranayt/ros2_ws/latty/install/latty_chassis/share/latty_chassis/config/latty_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>

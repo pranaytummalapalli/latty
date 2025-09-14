@@ -126,7 +126,7 @@
     </link>
 
   <!-- Steering joint: chassis <-> knuckle -->
-  <joint name="front_steer_joint" type="revolute">
+  <joint name="front_center_steer_joint" type="revolute">
     <parent>chassis</parent>
     <child>front_center_steer_link</child>
     <pose>0 0 0 0 0 0</pose> <!-- same location as knuckle -->
@@ -182,8 +182,21 @@
     </joint>
 
     <!-- Diff Drive Plugin -->
-    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-      <robot_sim_type>gazebo_ros2_control/DefaultRobotHWSim</robot_sim_type>
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/latty</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.34</wheel_separation>  <!-- distance between wheels -->
+      <wheel_diameter>0.14</wheel_diameter>
+      <odom_frame>odom</odom_frame>
+      <base_frame>chassis</base_frame>
+      <publish_odom>true</publish_odom>
+      <publish_tf>true</publish_tf>
+      <update_rate>50</update_rate>
     </plugin>
 
   </model>
