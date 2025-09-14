@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(gazebo_ros2_control REQUIRED)
+
 
 # Build executable
 add_executable(move_latty 
@@ -18,7 +20,8 @@ add_executable(move_latty
   )
 
 ament_target_dependencies(move_latty 
-  rclcpp 
+  rclcpp
+  gazebo_ros2_control
   gazebo_msgs 
   geometry_msgs
   )
@@ -47,7 +50,11 @@ install(DIRECTORY world
 )
 
 
-install(DIRECTORY models
+install(DIRECTORY urdf
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME}
 )
 
