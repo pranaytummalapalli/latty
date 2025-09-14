@@ -90,8 +90,40 @@ def generate_launch_description():
 
     # Spawn robot after 5 seconds if model exists
     spawn_robot = TimerAction(
-        period=5.0,
+        period=2.0,
         actions=[OpaqueFunction(function=spawn_robot_if_model_exists, kwargs={'env': env})]
     )
 
-    return LaunchDescription([gzserver, gzclient, spawn_robot])
+     # Load controllers after robot spawn
+    load_joint_state_broadcaster = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster"],
+    )
+    
+    load_front_steer = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["front_wheel_steer_position_controller"],
+    )
+
+    load_left_wheel = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["left_wheel_velocity_controller"],
+    )
+
+    load_right_wheel = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["right_wheel_velocity_controller"],
+    )
+
+    return LaunchDescription([
+        gzserver, 
+        gzclient, 
+        spawn_robot,
+        load_joint_state_broadcaster,
+        load_front_steer,
+        load_left_wheel,
+        load_right_wheel])
