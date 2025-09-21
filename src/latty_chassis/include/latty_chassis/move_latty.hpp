@@ -1,11 +1,10 @@
 #pragma once
 
 #include "rclcpp/rclcpp.hpp"
-#include "gazebo_msgs/srv/set_entity_state.hpp"
-#include "gazebo_msgs/msg/entity_state.hpp"
-#include "geometry_msgs/msg/pose.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 #include "rclcpp/qos.hpp"
+#include "topic_names.hpp"
 
 class MoveLatty : public rclcpp::Node
 {
@@ -14,20 +13,20 @@ public:
 
 private:
     void move_latty();
-    void PoseStampedToEntityState(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg);
-
-    double x_ = 0.0;
-    double y_ = 0.0;
-    double z_ = 0.0;
-    double q_x_ = 0.0;
-    double q_y_ = 0.0;
-    double q_z_ = 0.0;
-    double q_w_ = 0.0;
+    
+    double steer_angle_rad = 0.0;
+    double left_wheel_vel_rps = 0.0;
+    double right_wheel_vel_rps = 0.0;
 
     rclcpp::QoS qos_;
-    gazebo_msgs::msg::EntityState state_;
-    std::shared_ptr<gazebo_msgs::srv::SetEntityState::Request> request_;
-    rclcpp::Client<gazebo_msgs::srv::SetEntityState>::SharedPtr client_;
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
+    std_msgs::msg::Float64MultiArray steer_angle_rad_;
+    std_msgs::msg::Float64MultiArray left_wheel_vel_rps_;
+    std_msgs::msg::Float64MultiArray right_wheel_vel_rps_;
+    sensor_msgs::msg::JointState joint_states_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr knuckle_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr left_wheel_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr right_wheel_pub_;
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+
 };

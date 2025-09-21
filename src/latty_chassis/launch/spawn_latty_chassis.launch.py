@@ -1,7 +1,8 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, TimerAction, OpaqueFunction
+from launch.actions import ExecuteProcess, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable
 from launch_ros.parameter_descriptions import ParameterValue
 
 import os
@@ -107,55 +108,40 @@ def generate_launch_description():
         env=env
     )
 
-    # Spawn robot
-    spawn_robot = TimerAction(
-        period=2.0,
-        actions=[OpaqueFunction(function=spawn_robot_if_model_exists, kwargs={'env': env})]
+    spawn_robot = Node(
+        package='gazebo_ros',
+        executable='spawn_entity.py',
+        arguments=['-entity', 'latty_chassis', '-topic', 'robot_description'],
+        output='screen',
+        env=env
     )
 
-    # Start controller_manager after robot is spawned
-    controller_manager = TimerAction(
-        period=3.0,
-        actions=[
-            Node(
-                package="controller_manager",
-                executable="ros2_control_node",
-                parameters=[ robot_description,
-                    controllers_file ],
-                output="screen"
-            )
-        ]
+    load_joint_state_broadcaster = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster', '--controller-manager', '/controller_manager'],
+        output='screen'
     )
 
-    # Delay controller spawners
-    delayed_spawners = TimerAction(
-        period=5.0,
-        actions=[
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                arguments=['joint_state_broadcaster', '--controller-manager', '/controller_manager'],
-                output='screen'
-            ),
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                arguments=['front_wheel_steer_position_controller', '--controller-manager', '/controller_manager'],
-                output='screen'
-            ),
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                arguments=['left_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
-                output='screen'
-            ),
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                arguments=['right_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
-                output='screen'
-            ),
-        ]
+    load_front_wheel_steer_position_controller = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['front_wheel_steer_position_controller', '--controller-manager', '/controller_manager'],
+        output='screen'
+    )
+
+    load_right_wheel_velocity_controller = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['right_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
+        output='screen'
+    )
+
+    load_left_wheel_velocity_controller = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['left_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
+        output='screen'
     )
 
     return LaunchDescription([
@@ -163,6 +149,28 @@ def generate_launch_description():
         gzserver,
         gzclient,
         spawn_robot,
-        # controller_manager,
-        delayed_spawners
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=spawn_robot,
+                on_exit=[load_joint_state_broadcaster],
+            )
+        ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[load_front_wheel_steer_position_controller],
+            )
+        ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=load_front_wheel_steer_position_controller,
+                on_exit=[load_right_wheel_velocity_controller],
+            )
+        ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=load_right_wheel_velocity_controller,
+                on_exit=[load_left_wheel_velocity_controller],
+            )
+        ),
     ])

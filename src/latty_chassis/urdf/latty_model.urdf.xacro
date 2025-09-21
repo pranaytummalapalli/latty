@@ -4,15 +4,17 @@
   <!-- Parameters -->
   <xacro:property name="wheel_radius" value="0.1"/>
   <xacro:property name="wheel_length" value="0.06"/>
+  <xacro:property name="front_wheel_radius" value="0.03"/>
+  <xacro:property name="front_wheel_length" value="0.02"/>
   <xacro:property name="wheelbase" value="0.34"/>
 
   <!-- Chassis -->
   <link name="chassis">
 
     <inertial>
-      <origin xyz="0 0 0.1" rpy="0 0 0"/>
-      <mass value="10.0"/>
-      <inertia ixx="0.5" iyy="1.0" izz="0.1" ixy="0" ixz="0" iyz="0"/>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <mass value="30.0"/>
+      <inertia ixx="1.25" iyy="4.25" izz="5.0" ixy="0" ixz="0" iyz="0"/>
     </inertial>
 
     <visual>
@@ -42,25 +44,73 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.03 0.03 0.04"/>
+        <box size="0.03 0.02 0.04"/>
       </geometry>
     </visual>
 
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.06 0.03 0.06"/>
+        <box size="0.03 0.02 0.04"/>
       </geometry>
     </collision>
 
   </link>
 
-  <!-- Wheels -->
+  <!-- Front left wheel -->
+  <link name="front_left_wheel">
+
+    <inertial>
+      <mass value="1.5"/>
+      <inertia ixx="0.000388" iyy="0.000388" izz="0.000675" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${front_wheel_length}" radius="${front_wheel_radius}"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${front_wheel_length}" radius="${front_wheel_radius}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <!-- Front right wheel -->
+  <link name="front_right_wheel">
+
+    <inertial>
+      <mass value="1.5"/>
+      <inertia ixx="0.000388" iyy="0.000388" izz="0.000675" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${front_wheel_length}" radius="${front_wheel_radius}"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder length="${front_wheel_length}" radius="${front_wheel_radius}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <!-- Rear Wheels -->
   <link name="left_wheel">
 
     <inertial>
-      <mass value="2.0"/>
-      <inertia ixx="0.0056" iyy="0.0056" izz="0.01" ixy="0.0" ixz="0.0" iyz="0.0"/>
+      <mass value="5.0"/>
+      <inertia ixx="0.0143" iyy="0.0143" izz="0.025" ixy="0.0" ixz="0.0" iyz="0.0"/>
     </inertial>
 
     <visual>
@@ -82,8 +132,8 @@
   <link name="right_wheel">
     
     <inertial>
-      <mass value="2.0"/>
-      <inertia ixx="0.0056" iyy="0.0056" izz="0.01" ixy="0.0" ixz="0.0" iyz="0.0"/>
+      <mass value="5.0"/>
+      <inertia ixx="0.0143" iyy="0.0143" izz="0.025" ixy="0.0" ixz="0.0" iyz="0.0"/>
     </inertial>
     
     <visual>
@@ -101,6 +151,7 @@
     </collision>
 
   </link>
+  
 
   <!-- Gazebo material overrides -->
   <gazebo reference="chassis">
@@ -109,14 +160,40 @@
 
   <gazebo reference="left_wheel">
     <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
   </gazebo>
 
   <gazebo reference="right_wheel">
     <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
   </gazebo>
 
   <gazebo reference="steer_knuckle">
     <material>Gazebo/Grey</material>
+    <mu1>0.1</mu1>    <!-- Low friction coefficient -->
+    <mu2>0.1</mu2>    <!-- Low friction coefficient -->
+  </gazebo>
+
+  <gazebo reference="front_left_wheel">
+    <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+  </gazebo>
+
+  <gazebo reference="front_right_wheel">
+    <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
   </gazebo>
 
   <!-- Joints -->
@@ -129,22 +206,38 @@
     <dynamics damping="0.5"/>
   </joint>
 
-  <joint name="left_wheel_joint" type="revolute">
-    <parent link="chassis"/>
-    <child link="left_wheel"/>
-    <origin xyz="0.1 0.13 ${wheel_radius}" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="5" velocity="10"/>
-    <dynamics damping="0.1" friction="0.01"/>
+  <!-- Front wheel joints attached to knuckle -->
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="steer_knuckle"/>
+    <child link="front_left_wheel"/>
+    <origin xyz="0 0.02 -0.015" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.1" friction="0.05"/>
   </joint>
 
-  <joint name="right_wheel_joint" type="revolute">
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="steer_knuckle"/>
+    <child link="front_right_wheel"/>
+    <origin xyz="0 -0.02 -0.015" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <!-- Rear wheel joints -->
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="chassis"/>
+    <child link="left_wheel"/>
+    <origin xyz="0.1 0.13 0.085" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="1.0" friction="0.1"/>
+  </joint>
+
+  <joint name="right_wheel_joint" type="continuous">
     <parent link="chassis"/>
     <child link="right_wheel"/>
-    <origin xyz="0.1 -0.13 ${wheel_radius}" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="5" velocity="10"/>
-    <dynamics damping="0.1" friction="0.01"/>
+    <origin xyz="0.1 -0.13 0.085" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="1.0" friction="0.1"/>
   </joint>
 
   <!-- ros2_control hardware definition -->

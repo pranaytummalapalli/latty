@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(gazebo_ros2_control REQUIRED)
 
 
@@ -22,6 +23,7 @@ add_executable(move_latty
 ament_target_dependencies(move_latty 
   rclcpp
   gazebo_ros2_control
+  std_msgs
   gazebo_msgs 
   geometry_msgs
   )
