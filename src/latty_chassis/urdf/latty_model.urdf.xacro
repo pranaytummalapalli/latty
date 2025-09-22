@@ -228,16 +228,16 @@
     <parent link="chassis"/>
     <child link="left_wheel"/>
     <origin xyz="0.1 0.13 0.085" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <dynamics damping="1.0" friction="0.1"/>
+    <axis xyz="0 -1 0"/>
+    <dynamics damping="5.0" friction="0.5"/>
   </joint>
 
   <joint name="right_wheel_joint" type="continuous">
     <parent link="chassis"/>
     <child link="right_wheel"/>
     <origin xyz="0.1 -0.13 0.085" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <dynamics damping="1.0" friction="0.1"/>
+    <axis xyz="0 -1 0"/>
+    <dynamics damping="5.0" friction="0.5"/>
   </joint>
 
   <!-- ros2_control hardware definition -->

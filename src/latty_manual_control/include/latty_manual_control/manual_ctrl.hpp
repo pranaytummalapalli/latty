@@ -1,28 +1,52 @@
 #pragma once
 
+#include <string>
+#include <ncurses.h>
+#include <chrono>
+#include <thread>
+#include <csignal>
+#include <atomic>
+#include <cmath>
+#include <sstream>
+#include <mutex>
+
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/header.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
 #include "rclcpp/qos.hpp"
 
-#define TARGET_POSE_X 5.0
-#define TARGET_POSE_Y 7.0
-#define TARGET_POSE_Z 0.0
-#define TARGET_ORIENTATION_X 0.0
-#define TARGET_ORIENTATION_Y 0.0
-#define TARGET_ORIENTATION_Z 0.0
-#define TARGET_ORIENTATION_W 1.0
+using namespace std::chrono_literals;
 
 class ManualControl : public rclcpp::Node
 {
 public:
-    ManualControl();
+    explicit ManualControl(std::atomic<bool> &running);
+    ~ManualControl();
 
 private:
-    void set_pose();
+    void init();
+
+    std::string fmt(double v);
+
+    void run_ui();
+    void stop_ui();
+    
+    double steer_angle_rad = 0.0;
+    double wheelspeed = 0.0;    
+    
+    double steer_increment = 0.1;
+    double wheelspeed_increment = 0.5;
+
+    std::atomic<bool> &running_;
+
+    std::thread ui_thread_;
+    std::mutex ui_mutex_;
 
     rclcpp::QoS qos_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
-    geometry_msgs::msg::PoseStamped pose_;
+    std_msgs::msg::Float64MultiArray controls_;
+
+    ManualControl(const ManualControl &) = delete;
+    ManualControl & operator=(const ManualControl &) = delete;
 };
