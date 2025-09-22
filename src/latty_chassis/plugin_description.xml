@@ -1,0 +1,9 @@
+<library path="libgazebo_ros2_control.so">
+  <class name="gazebo_ros2_control/GazeboSystem"
+         type="gazebo_ros2_control::GazeboSystem"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Gazebo System plugin for ros2_control integration
+    </description>
+  </class>
+</library>

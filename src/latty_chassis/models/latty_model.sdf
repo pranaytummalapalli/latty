@@ -1,0 +1,203 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+
+  <model name="latty_chassis">
+    <pose>0 0 0 0 0 0</pose>
+    <static>false</static>
+
+    <!-- Chassis link -->
+    <link name="chassis">
+      <pose>0 0 0.1 0 0 0</pose> <!-- lifted to sit on wheels -->
+      <collision name="collision">
+        <geometry>
+          <box><size>0.4 0.2 0.1</size></box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box><size>0.4 0.2 0.1</size></box>
+        </geometry>
+        <material>
+          <ambient>1.0 0.827 0.0 1</ambient>
+          <diffuse>1.0 0.827 0.0 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+        </material>
+      </visual>
+      <inertial>
+        <mass>10.0</mass>
+        <inertia>
+          <ixx>0.5</ixx>
+          <iyy>1.0</iyy>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+  <!-- Front-center steering knuckle -->
+  <link name="front_center_steer_link">
+    <pose>-0.15 0 0.03 0 0 0</pose> <!-- same location as the caster -->
+    <inertial>
+      <mass>0.5</mass>
+      <inertia>
+        <ixx>0.001</ixx>
+        <iyy>0.001</iyy>
+        <izz>0.001</izz>
+      </inertia>
+    </inertial>
+
+    <!-- Knuckle visual -->
+    <visual name="front_center_knuckle_visual">
+      <geometry>
+        <box>
+          <size>0.03 0.03 0.04</size> <!-- small cube-shaped block -->
+        </box>
+      </geometry>
+      <material>
+        <ambient>0.8 0.8 0.8 1</ambient> <!-- bluish block -->
+        <diffuse>0.8 0.8 0.8 1</diffuse>
+        <specular>0.3 0.3 0.3 1</specular>
+      </material>
+    </visual>
+
+    <!-- Knuckle collision (optional for realism) -->
+    <collision name="front_center_knuckle_collision">
+      <geometry>
+        <box>
+          <size>0.06 0.03 0.06</size>
+        </box>
+      </geometry>
+    </collision>
+  </link>
+
+    <!-- Left Wheel Link -->
+    <link name="Left_Wheel">
+      <pose>0.1 0.13 0.1 0 1.5707 1.5707</pose> <!-- wheel center at z = radius -->
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <length>0.06</length>
+            <radius>0.1</radius>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <length>0.06</length>
+            <radius>0.1</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.05 0.05 0.05 1</diffuse>
+        </material>
+      </visual>
+      <inertial>
+        <mass>2.0</mass>
+      </inertial>
+    </link>
+
+    <!-- Right Wheel Link -->
+    <link name="Right_Wheel">
+      <pose>0.1 -0.13 0.1 0 1.5707 1.5707</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <length>0.06</length>
+            <radius>0.1</radius>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <length>0.06</length>
+            <radius>0.1</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.05 0.05 0.05 1</diffuse>
+        </material>
+      </visual>
+      <inertial>
+        <mass>2.0</mass>
+      </inertial>
+    </link>
+
+  <!-- Steering joint: chassis <-> knuckle -->
+  <joint name="front_center_steer_joint" type="revolute">
+    <parent>chassis</parent>
+    <child>front_center_steer_link</child>
+    <pose>0 0 0 0 0 0</pose> <!-- same location as knuckle -->
+    <axis>
+      <xyz>0 0 1</xyz> <!-- rotation about Z axis (yaw steering) -->
+      <limit>
+        <lower>-0.785</lower>   <!-- -45 degrees -->
+        <upper> 0.785</upper>   <!-- +45 degrees -->
+        <effort>10</effort>
+        <velocity>3</velocity>
+      </limit>
+      <dynamics>
+        <damping>0.5</damping> <!-- prevents oscillation -->
+      </dynamics>
+    </axis>
+  </joint>
+      
+
+    <!-- Left wheel joint -->
+    <joint name="left_wheel_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>Left_Wheel</child>
+      <pose>0 0 -0.03 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <effort>5</effort>
+          <velocity>10</velocity>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- Right wheel joint -->
+    <joint name="right_wheel_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>Right_Wheel</child>
+      <pose>0 0 0.03 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <effort>5</effort>
+          <velocity>10</velocity>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- Diff Drive Plugin -->
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/latty</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.34</wheel_separation>  <!-- distance between wheels -->
+      <wheel_diameter>0.14</wheel_diameter>
+      <odom_frame>odom</odom_frame>
+      <base_frame>chassis</base_frame>
+      <publish_odom>true</publish_odom>
+      <publish_tf>true</publish_tf>
+      <update_rate>50</update_rate>
+    </plugin>
+
+  </model>
+</sdf>

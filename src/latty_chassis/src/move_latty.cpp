@@ -1,5 +1,7 @@
 #include "latty_chassis/move_latty.hpp"
 
+#define MOVE_WHEELS_EQUAL 1
+
 using namespace std::chrono_literals;
 
 MoveLatty::MoveLatty() 
@@ -8,69 +10,71 @@ MoveLatty::MoveLatty()
                 .reliability(rclcpp::ReliabilityPolicy::Reliable)
                 .durability(rclcpp::DurabilityPolicy::Volatile))
 {
-    pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>
-                    ("Latty/TargetPose",qos_,
-                    std::bind(&MoveLatty::PoseStampedToEntityState, this, std::placeholders::_1));
+//     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>
+//                             (joint_states_topic ,qos_,
+//                             std::bind(&MoveLatty::move_latty, this, std::placeholders::_1));
+
+    // if(joint_state_sub_ = nullptr) {
+    //     RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", joint_states_topic);
+    // }
 
 
-    // Create service client
-    client_ = this->create_client<gazebo_msgs::srv::SetEntityState>("/gazebo/set_entity_state");
+    steer_angle_rad_.data.resize(1);
+    left_wheel_vel_rps_.data.resize(1);
+    right_wheel_vel_rps_.data.resize(1);
 
-    // Wait until the service is available
-    while (!client_->wait_for_service(1s)) {
-        RCLCPP_INFO(this->get_logger(), "Waiting for /gazebo/set_entity_state...");
+    knuckle_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
+                                (front_steer_topic, qos_);
+
+    if(knuckle_pub_ == nullptr) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", front_steer_topic.c_str());
+        return;
+    }
+
+    left_wheel_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
+                                (left_wheel_vel_topic, qos_);
+
+    if(left_wheel_pub_ == nullptr) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", left_wheel_vel_topic.c_str());
+    }
+
+    right_wheel_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
+                                (right_wheel_vel_topic, qos_);
+
+    if(right_wheel_pub_ == nullptr) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", right_wheel_vel_topic.c_str());
+    }
+
+    control_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>
+                            ("Latty/ControlTarget", qos_,
+                            std::bind(&MoveLatty::populate_control, this, std::placeholders::_1));
+    
+    if(control_sub_ == nullptr) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create control subscriber!");
     }
 
     // Timer to move the robot every 100ms
-    timer_ = this->create_wall_timer(10ms, std::bind(&MoveLatty::move_latty, this));
+    timer_ = this->create_wall_timer(50ms, std::bind(&MoveLatty::move_latty, this));
 }
 
-void MoveLatty::PoseStampedToEntityState(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
+void MoveLatty::populate_control(const std_msgs::msg::Float64MultiArray::SharedPtr control_msg)
 {
-    x_ = pose_msg->pose.position.x;
-    y_ = pose_msg->pose.position.y;
-    z_ = pose_msg->pose.position.z;
-
-    q_x_ = pose_msg->pose.orientation.x;
-    q_y_ = pose_msg->pose.orientation.y;
-    q_z_ = pose_msg->pose.orientation.z;
-    q_w_ = pose_msg->pose.orientation.w;
-
-    RCLCPP_INFO(
-        this->get_logger(),
-        "Received PoseStamped -> (x = %.2f, y = %.2f, z = %.2f, qx = %.2f, qy = %.2f, qz = %.2f, qw = %.2f)",
-        x_, y_, z_, q_x_, q_y_, q_z_, q_w_);
-
+    if(control_msg->data.size() >= 2)
+    {
+        left_wheel_vel_rps = control_msg->data[0];
+        right_wheel_vel_rps = control_msg->data[0];
+        steer_angle_rad = control_msg->data[1];
+    }
 }
+
 
 void MoveLatty::move_latty()
 {
-    // Create request
-    request_ = std::make_shared<gazebo_msgs::srv::SetEntityState::Request>();
+    steer_angle_rad_.data[0] = steer_angle_rad;
+    left_wheel_vel_rps_.data[0] = left_wheel_vel_rps;
+    right_wheel_vel_rps_.data[0] = right_wheel_vel_rps;
 
-    state_.name = "warehouse_robot";   // must match the model name in Gazebo
-    state_.pose.position.x = x_;
-    state_.pose.position.y = y_;
-    state_.pose.position.z = z_;
-    state_.pose.orientation.x = q_x_;
-    state_.pose.orientation.y = q_y_;
-    state_.pose.orientation.z = q_z_;
-    state_.pose.orientation.w = q_w_;
-
-    request_->state = state_;
-
-    // Call service asynchronously
-    auto future = client_->async_send_request(request_,
-        [this](rclcpp::Client<gazebo_msgs::srv::SetEntityState>::SharedFuture future_response) {
-            try {
-                auto result = future_response.get();
-                if (result->success) {
-                    RCLCPP_INFO(this->get_logger(), "Moved robot to (%.2f, %.2f)", x_, y_);
-                } else {
-                    RCLCPP_WARN(this->get_logger(), "Failed to move robot");
-                }
-            } catch (const std::exception &e) {
-                RCLCPP_ERROR(this->get_logger(), "Service call failed: %s", e.what());
-            }
-        });
+    knuckle_pub_->publish(steer_angle_rad_);
+    left_wheel_pub_->publish(left_wheel_vel_rps_);
+    right_wheel_pub_->publish(right_wheel_vel_rps_);
 }

@@ -10,12 +10,13 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(Curses REQUIRED)
 
 # Build executable
 add_executable(manual_control
   src/manual_ctrl.cpp
   src/main.cpp
-)
+) 
 
 ament_target_dependencies(manual_control
   rclcpp
@@ -28,6 +29,9 @@ target_include_directories(manual_control PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+
+# Link ncurses
+target_link_libraries(manual_control ${CURSES_LIBRARIES})
 
 # Install targets
 install(TARGETS
