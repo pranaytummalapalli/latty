@@ -10,13 +10,20 @@ MoveLatty::MoveLatty()
                 .reliability(rclcpp::ReliabilityPolicy::Reliable)
                 .durability(rclcpp::DurabilityPolicy::Volatile))
 {
-//     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>
-//                             (joint_states_topic ,qos_,
-//                             std::bind(&MoveLatty::move_latty, this, std::placeholders::_1));
+    joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>
+                            (joint_states_topic ,qos_,
+                            std::bind(&MoveLatty::joint_states_remap, this, std::placeholders::_1));
 
-    // if(joint_state_sub_ = nullptr) {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", joint_states_topic);
-    // }
+    if(joint_state_sub_ == nullptr) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", joint_states_topic.c_str());
+    }
+
+    Joint_state_pos_pub_ = this->create_publisher<sensor_msgs::msg::JointState>
+                                        (joint_states_pos_topic, qos_);
+    if(Joint_state_pos_pub_ == nullptr) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", joint_states_pos_topic.c_str());
+        return;
+    }
 
 
     steer_angle_rad_.data.resize(1);
@@ -46,7 +53,7 @@ MoveLatty::MoveLatty()
     }
 
     control_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>
-                            ("Latty/ControlTarget", qos_,
+                            (control_topic, qos_,
                             std::bind(&MoveLatty::populate_control, this, std::placeholders::_1));
     
     if(control_sub_ == nullptr) {
@@ -65,6 +72,34 @@ void MoveLatty::populate_control(const std_msgs::msg::Float64MultiArray::SharedP
         right_wheel_vel_rps = control_msg->data[0];
         steer_angle_rad = control_msg->data[1];
     }
+}
+
+void MoveLatty::joint_states_remap(const sensor_msgs::msg::JointState::SharedPtr joint_states)
+{
+    auto joint = *joint_states;
+
+    auto now = this->now();
+
+     if (last_time_.nanoseconds() == 0) {
+        last_time_ = now;
+        return;
+    }
+
+    double dt = (now - last_time_).seconds();
+    last_time_ = now;
+
+    for(size_t i = 0; i < joint.name.size(); i++)
+    {
+        if(std::isnan(joint.position[i]) && !std::isnan(joint.velocity[i]))
+        {
+            joint.position[i] = last_pos_[joint.name[i]] + joint.velocity[i] * dt;
+        }
+        last_pos_[joint.name[i]] = joint.position[i];
+    }
+
+    Joint_state_pos_pub_->publish(joint);
+    RCLCPP_INFO(this->get_logger(), "Frame sent to joint_states_pos_.");
+    RCLCPP_INFO(this->get_logger(), "Position of right wheel: %f", joint.position[1]);
 }
 
 

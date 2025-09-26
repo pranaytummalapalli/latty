@@ -88,7 +88,8 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description]
+        parameters=[robot_description],
+        remappings=[("/joint_states", "/joint_states_pos")]
     )
 
     gzserver = ExecuteProcess(
@@ -130,6 +131,20 @@ def generate_launch_description():
         output='screen'
     )
 
+    # load_front_left_wheel_velocity_controller = Node(
+    #     package='controller_manager',
+    #     executable='spawner',
+    #     arguments=['front_left_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
+    #     output='screen'
+    # )
+
+    # load_front_right_wheel_velocity_controller = Node(
+    #     package='controller_manager',
+    #     executable='spawner',
+    #     arguments=['front_right_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
+    #     output='screen'
+    # )
+
     load_right_wheel_velocity_controller = Node(
         package='controller_manager',
         executable='spawner',
@@ -144,6 +159,13 @@ def generate_launch_description():
         output='screen'
     )
 
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=["-d", os.path.join(pkg_share, "rviz", "latty.rviz")],
+        output="screen"
+    )
+
     return LaunchDescription([
         rsp_node,
         gzserver,
@@ -152,25 +174,36 @@ def generate_launch_description():
         RegisterEventHandler(
             OnProcessExit(
                 target_action=spawn_robot,
-                on_exit=[load_joint_state_broadcaster],
+                on_exit=[load_joint_state_broadcaster, 
+                         load_front_wheel_steer_position_controller,
+                        #  load_front_left_wheel_velocity_controller,
+                        #  load_front_right_wheel_velocity_controller,
+                         load_right_wheel_velocity_controller,
+                         load_left_wheel_velocity_controller],
             )
         ),
+        # RegisterEventHandler(
+        #     OnProcessExit(
+        #         target_action=load_joint_state_broadcaster,
+        #         on_exit=[load_front_wheel_steer_position_controller],
+        #     )
+        # ),
+        # RegisterEventHandler(
+        #     OnProcessExit(
+        #         target_action=load_front_wheel_steer_position_controller,
+        #         on_exit=[load_right_wheel_velocity_controller],
+        #     )
+        # ),
+        # RegisterEventHandler(
+        #     OnProcessExit(
+        #         target_action=load_right_wheel_velocity_controller,
+        #         on_exit=[load_left_wheel_velocity_controller],
+        #     )
+        # ),
         RegisterEventHandler(
             OnProcessExit(
-                target_action=load_joint_state_broadcaster,
-                on_exit=[load_front_wheel_steer_position_controller],
+                target_action=load_left_wheel_velocity_controller,
+                on_exit=[rviz_node],
             )
-        ),
-        RegisterEventHandler(
-            OnProcessExit(
-                target_action=load_front_wheel_steer_position_controller,
-                on_exit=[load_right_wheel_velocity_controller],
-            )
-        ),
-        RegisterEventHandler(
-            OnProcessExit(
-                target_action=load_right_wheel_velocity_controller,
-                on_exit=[load_left_wheel_velocity_controller],
-            )
-        ),
+        )
     ])
