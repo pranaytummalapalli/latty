@@ -10,14 +10,7 @@ MoveLatty::MoveLatty()
                 .reliability(rclcpp::ReliabilityPolicy::Reliable)
                 .durability(rclcpp::DurabilityPolicy::Volatile))
 {
-//     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>
-//                             (joint_states_topic ,qos_,
-//                             std::bind(&MoveLatty::move_latty, this, std::placeholders::_1));
-
-    // if(joint_state_sub_ = nullptr) {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", joint_states_topic);
-    // }
-
+    this->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
     steer_angle_rad_.data.resize(1);
     left_wheel_vel_rps_.data.resize(1);
@@ -46,7 +39,7 @@ MoveLatty::MoveLatty()
     }
 
     control_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>
-                            ("Latty/ControlTarget", qos_,
+                            (control_topic, qos_,
                             std::bind(&MoveLatty::populate_control, this, std::placeholders::_1));
     
     if(control_sub_ == nullptr) {
@@ -66,7 +59,6 @@ void MoveLatty::populate_control(const std_msgs::msg::Float64MultiArray::SharedP
         steer_angle_rad = control_msg->data[1];
     }
 }
-
 
 void MoveLatty::move_latty()
 {

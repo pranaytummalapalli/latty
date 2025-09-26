@@ -12,6 +12,11 @@ find_package(gazebo_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(gazebo_ros2_control REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 
 # Build executable
@@ -19,6 +24,8 @@ add_executable(move_latty
   src/move_latty.cpp
   src/main.cpp
   )
+
+add_executable(latty_odom src/odom.cpp)
 
 ament_target_dependencies(move_latty 
   rclcpp
@@ -28,8 +35,22 @@ ament_target_dependencies(move_latty
   geometry_msgs
   )
 
+ament_target_dependencies(latty_odom 
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  )
+
 # Include headers
 target_include_directories(move_latty PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
+target_include_directories(latty_odom PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   )
@@ -37,6 +58,7 @@ target_include_directories(move_latty PUBLIC
 # Install targets
 install(TARGETS
   move_latty
+  latty_odom
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/
@@ -57,6 +79,10 @@ install(DIRECTORY urdf
 )
 
 install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

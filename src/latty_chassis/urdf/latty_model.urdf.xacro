@@ -6,7 +6,9 @@
   <xacro:property name="wheel_length" value="0.06"/>
   <xacro:property name="front_wheel_radius" value="0.03"/>
   <xacro:property name="front_wheel_length" value="0.02"/>
-  <xacro:property name="wheelbase" value="0.34"/>
+  <xacro:property name="wheelbase" value="0.25"/>
+
+  <link name="base_link"/>
 
   <!-- Chassis -->
   <link name="chassis">
@@ -197,6 +199,14 @@
   </gazebo>
 
   <!-- Joints -->
+
+  <joint name="base_to_chassis" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis"/>
+    <!-- Rotate chassis 180 deg around z if needed -->
+    <origin xyz="0 0 0" rpy="0 0 3.14159"/>
+  </joint>
+
   <joint name="front_steer_joint" type="revolute">
     <parent link="chassis"/>
     <child link="steer_knuckle"/>
@@ -211,7 +221,7 @@
     <parent link="steer_knuckle"/>
     <child link="front_left_wheel"/>
     <origin xyz="0 0.02 -0.015" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="0 -1 0"/>
     <dynamics damping="0.1" friction="0.05"/>
   </joint>
 
@@ -219,7 +229,7 @@
     <parent link="steer_knuckle"/>
     <child link="front_right_wheel"/>
     <origin xyz="0 -0.02 -0.015" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="0 -1 0"/>
     <dynamics damping="0.1" friction="0.05"/>
   </joint>
 
@@ -251,16 +261,30 @@
       <state_interface name="position"/>
     </joint>
 
+    <joint name="front_left_wheel_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="front_right_wheel_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
     <joint name="left_wheel_joint">
       <command_interface name="velocity"/>
+      <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
 
     <joint name="right_wheel_joint">
       <command_interface name="velocity"/>
+      <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
   </ros2_control>
+
+
 
   <gazebo>
     <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
