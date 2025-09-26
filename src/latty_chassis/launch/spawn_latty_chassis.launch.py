@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, RegisterEventHandler
+from launch.actions import ExecuteProcess, RegisterEventHandler, TimerAction
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from launch.substitutions import Command, FindExecutable
@@ -63,6 +63,7 @@ def generate_launch_description():
     urdf_file = os.path.join(pkg_share, 'urdf', 'latty_model.urdf.xacro')
     world_path = os.path.join(pkg_share, 'world', 'lattys_world.sdf')
     controllers_file = os.path.join(pkg_share, 'config', 'latty_controllers.yaml')
+    rviz_config_file = os.path.join(pkg_share, "rviz", "latty.rviz")
 
     robot_description_content = Command([
         FindExecutable(name='xacro'),
@@ -88,8 +89,8 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description],
-        remappings=[("/joint_states", "/joint_states_pos")]
+        parameters=[robot_description, {"use_sim_time": True}],
+        # remappings=[("/joint_states", "/joint_states_pos")]
     )
 
     gzserver = ExecuteProcess(
@@ -97,7 +98,8 @@ def generate_launch_description():
             'gzserver',
             '--verbose',
             world_path,
-            '-s', 'libgazebo_ros_factory.so'
+            '-s', 'libgazebo_ros_factory.so',
+            '-s', 'libgazebo_ros_init.so'
         ],
         output='screen',
         env=env
@@ -131,20 +133,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # load_front_left_wheel_velocity_controller = Node(
-    #     package='controller_manager',
-    #     executable='spawner',
-    #     arguments=['front_left_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
-    #     output='screen'
-    # )
-
-    # load_front_right_wheel_velocity_controller = Node(
-    #     package='controller_manager',
-    #     executable='spawner',
-    #     arguments=['front_right_wheel_velocity_controller', '--controller-manager', '/controller_manager'],
-    #     output='screen'
-    # )
-
     load_right_wheel_velocity_controller = Node(
         package='controller_manager',
         executable='spawner',
@@ -163,47 +151,59 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         arguments=["-d", os.path.join(pkg_share, "rviz", "latty.rviz")],
-        output="screen"
+        output="screen",
+        parameters=[{"use_sim_time": True}]
+    )
+
+    latty_chassis_node = Node(
+        package="latty_chassis",
+        executable="move_latty",
+        name="move_latty",
+        output="screen",
+        parameters=[{"use_sim_time": True}]
+    )
+
+    latty_odom_node = Node(
+        package="latty_chassis",
+        executable="latty_odom",
+        name="latty_odom",
+        output="screen",
+        parameters=[{"use_sim_time": True}]
     )
 
     return LaunchDescription([
-        rsp_node,
-        gzserver,
-        gzclient,
-        spawn_robot,
-        RegisterEventHandler(
-            OnProcessExit(
-                target_action=spawn_robot,
-                on_exit=[load_joint_state_broadcaster, 
-                         load_front_wheel_steer_position_controller,
-                        #  load_front_left_wheel_velocity_controller,
-                        #  load_front_right_wheel_velocity_controller,
-                         load_right_wheel_velocity_controller,
-                         load_left_wheel_velocity_controller],
-            )
-        ),
-        # RegisterEventHandler(
-        #     OnProcessExit(
-        #         target_action=load_joint_state_broadcaster,
-        #         on_exit=[load_front_wheel_steer_position_controller],
-        #     )
-        # ),
-        # RegisterEventHandler(
-        #     OnProcessExit(
-        #         target_action=load_front_wheel_steer_position_controller,
-        #         on_exit=[load_right_wheel_velocity_controller],
-        #     )
-        # ),
-        # RegisterEventHandler(
-        #     OnProcessExit(
-        #         target_action=load_right_wheel_velocity_controller,
-        #         on_exit=[load_left_wheel_velocity_controller],
-        #     )
-        # ),
-        RegisterEventHandler(
-            OnProcessExit(
-                target_action=load_left_wheel_velocity_controller,
-                on_exit=[rviz_node],
-            )
+    rsp_node,
+    gzserver,
+    gzclient,
+    spawn_robot,
+    RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_robot,
+            on_exit=[load_joint_state_broadcaster],
         )
-    ])
+    ),
+    RegisterEventHandler(
+        OnProcessExit(
+            target_action=load_joint_state_broadcaster,
+            on_exit=[load_front_wheel_steer_position_controller],
+        )
+    ),
+    RegisterEventHandler(
+        OnProcessExit(
+            target_action=load_front_wheel_steer_position_controller,
+            on_exit=[load_right_wheel_velocity_controller],
+        )
+    ),
+    RegisterEventHandler(
+        OnProcessExit(
+            target_action=load_right_wheel_velocity_controller,
+            on_exit=[load_left_wheel_velocity_controller],
+        )
+    ),
+    RegisterEventHandler(
+        OnProcessExit(
+            target_action=load_left_wheel_velocity_controller,
+            on_exit=[latty_chassis_node,  latty_odom_node, rviz_node],
+        )
+    ),
+])
