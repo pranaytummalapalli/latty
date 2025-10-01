@@ -51,12 +51,17 @@ MoveLatty::MoveLatty()
 }
 
 void MoveLatty::populate_control(const std_msgs::msg::Float64MultiArray::SharedPtr control_msg)
-{
+{   
     if(control_msg->data.size() >= 2)
-    {
-        left_wheel_vel_rps = control_msg->data[0];
-        right_wheel_vel_rps = control_msg->data[0];
+    {   
+        
+        double latty_velocity = control_msg->data[0];
+        if(latty_velocity > 0.3) latty_velocity = 0.3;
+        if(latty_velocity < -0.3) latty_velocity = -0.3;
+
         steer_angle_rad = control_msg->data[1];
+        right_wheel_vel_rps = latty_velocity / wheelradius;
+        left_wheel_vel_rps = latty_velocity / wheelradius;
     }
 }
 

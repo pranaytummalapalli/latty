@@ -1,6 +1,8 @@
 #include <rerun.hpp>
 #include <rerun/demo_utils.hpp>
 
+#include "rclcpp/rclcpp.hpp"
+
 using namespace rerun::demo;
 
 int main()

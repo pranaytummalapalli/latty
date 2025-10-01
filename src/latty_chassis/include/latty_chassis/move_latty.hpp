@@ -22,6 +22,8 @@ private:
     double left_wheel_vel_rps = 0.0;    
     double right_wheel_vel_rps = 0.0;
 
+    const double wheelradius = 0.1;
+
     rclcpp::QoS qos_;
     rclcpp::TimerBase::SharedPtr timer_;
     
