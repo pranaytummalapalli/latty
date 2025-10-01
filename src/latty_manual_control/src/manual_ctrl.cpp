@@ -2,10 +2,10 @@
 
 ManualControl::ManualControl(std::atomic<bool> &running)
     : Node("latty_manual_control"),
+      running_(running),
       qos_(rclcpp::QoS(rclcpp::KeepLast(10))
                 .reliability(rclcpp::ReliabilityPolicy::Reliable)
-                .durability(rclcpp::DurabilityPolicy::Volatile)),
-      running_(running)
+                .durability(rclcpp::DurabilityPolicy::Volatile))
 {
     
     
@@ -17,7 +17,7 @@ ManualControl::ManualControl(std::atomic<bool> &running)
         20ms,  // 50 Hz publishing
         [this]() {
             std::lock_guard<std::mutex> lock(ui_mutex_);
-            controls_.data[0] = wheelspeed;
+            controls_.data[0] = velocity;
             controls_.data[1] = steer_angle_rad;
             publisher_->publish(controls_);
         }
@@ -73,10 +73,10 @@ void ManualControl::run_ui()
             switch(c)
             {
                 case KEY_UP:
-                    wheelspeed += wheelspeed_increment;
+                    velocity += velocity_increment;
                     break;
                 case KEY_DOWN:
-                    wheelspeed -= wheelspeed_increment;
+                    velocity -= velocity_increment;
                     break;
                 case KEY_LEFT:
                     steer_angle_rad += steer_increment;
@@ -92,7 +92,7 @@ void ManualControl::run_ui()
                 default: break;
             }
 
-            if (std::fabs(wheelspeed) < 1e-6) wheelspeed = 0.0;
+            if (std::fabs(velocity) < 1e-6) velocity = 0.0;
             if (std::fabs(steer_angle_rad) < 1e-6) steer_angle_rad = 0.0;
         }
 
@@ -100,7 +100,7 @@ void ManualControl::run_ui()
         mvprintw(0, 2, "Simple Teleop (ncurses)");
         mvprintw(2, 2, "Use arrow keys: UP/DOWN=Speed, LEFT/RIGHT=Steer");
         mvprintw(3, 2, "SPACE=stop, q=quit");
-        mvprintw(5, 2, "Wheelspeed:  %s", fmt(wheelspeed).c_str());
+        mvprintw(5, 2, "velocity:  %s", fmt(velocity).c_str());
         mvprintw(6, 2, "Steer_angle_rad: %s", fmt(steer_angle_rad).c_str());
         refresh();
 

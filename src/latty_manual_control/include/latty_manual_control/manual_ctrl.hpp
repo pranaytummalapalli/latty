@@ -32,10 +32,10 @@ private:
     void stop_ui();
     
     double steer_angle_rad = 0.0;
-    double wheelspeed = 0.0;    
+    double velocity = 0.0;    
     
     double steer_increment = 0.1;
-    double wheelspeed_increment = 0.5;
+    double velocity_increment = 0.1;
 
     std::atomic<bool> &running_;
 

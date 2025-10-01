@@ -153,6 +153,30 @@
     </collision>
 
   </link>
+
+  <!-- IMU -->
+  <link name="imu_link">
+    
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.02 0.02 0.01"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0"  rpy="0 0 0"/>
+      <mass value="0.01"/>
+      <inertia ixx="1e-6" iyy="1e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.02"/>
+      </geometry>
+    </visual>
+  </link>
   
 
   <!-- Gazebo material overrides -->
@@ -172,7 +196,7 @@
     <material>Gazebo/Black</material>
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
+    <kp>1000000.0</kp>  
     <kd>1.0</kd>
   </gazebo>
 
@@ -198,6 +222,10 @@
     <kd>1.0</kd>
   </gazebo>
 
+  <gazebo reference="imu_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
   <!-- Joints -->
 
   <joint name="base_to_chassis" type="fixed">
@@ -205,6 +233,12 @@
     <child link="chassis"/>
     <!-- Rotate chassis 180 deg around z if needed -->
     <origin xyz="0 0 0" rpy="0 0 3.14159"/>
+  </joint>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="-0.05 0 0.16" rpy="0 0 0"/>
   </joint>
 
   <joint name="front_steer_joint" type="revolute">
@@ -290,6 +324,21 @@
     <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
       <parameters>/home/pranayt/ros2_ws/latty/install/latty_chassis/share/latty_chassis/config/latty_controllers.yaml</parameters>
     </plugin>
+  </gazebo>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100.0</update_rate>
+      <visualize>true</visualize>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remappings>~/out:=/imu</remappings>
+        </ros>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+    </sensor>
   </gazebo>
 
 </robot>
