@@ -122,6 +122,8 @@ private:
             imu_pose_->orientation.yaw
         );
 
+       
+
         imu_pose_->timestamp = imu_msg->header.stamp.sec + imu_msg->header.stamp.nanosec * 1e-9; 
     }
 
@@ -129,7 +131,7 @@ private:
     {   
         for (size_t i = 0; i < model_states->name.size(); i++) {
             if (model_states->name[i] == "latty_chassis") {
-
+                
                 const auto &pose = model_states->pose[i];
 
                 tf2::Quaternion q(
@@ -143,10 +145,12 @@ private:
 
                 std::lock_guard<std::mutex> lock(mutex_);
                 m.getRPY(
-                    imu_pose_->orientation.roll,
-                    imu_pose_->orientation.pitch,
-                    imu_pose_->orientation.yaw
+                    model_pose_->orientation.roll,
+                    model_pose_->orientation.pitch,
+                    model_pose_->orientation.yaw
                 );
+
+                // RCLCPP_INFO(this->get_logger(), "Found chassis pose: %.9f", model_pose_->orientation.yaw);
             }
         }
     }

@@ -37,6 +37,10 @@ private:
             if(start_time_ < 0) start_time_ = odom.timestamp;
             double rel_time = odom.timestamp - start_time_;
 
+            double deviation = imu.orientation.yaw - model_states.orientation.yaw;
+            RCLCPP_INFO(state_->get_logger(), "Found delta: %.4f", deviation);
+            // RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f", model_states.orientation.yaw);
+
             rec_.set_time_seconds("rel_time", rel_time);
             rec_.log("yaw/odom", rerun::Scalars(odom.orientation.yaw));
             rec_.log("yaw/imu", rerun::Scalars(imu.orientation.yaw));
