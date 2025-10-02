@@ -4,6 +4,7 @@
 #include "rclcpp/qos.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/imu.hpp"
+#include "gazebo_msgs/msg/model_states.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <cmath>
@@ -47,8 +48,13 @@ public:
                             "/imu_plugin/out", qos_,
                             std::bind(&StateSubscriber::read_imu, this, std::placeholders::_1));
 
+        model_states_sub_ = this->create_subscription<gazebo_msgs::msg::ModelStates>(
+                            "/gazebo/model_states", qos_,
+                            std::bind(&StateSubscriber::read_model_states, this, std::placeholders::_1));
+
         odom_pose_ = std::make_shared<PoseRPY>();
         imu_pose_  = std::make_shared<PoseRPY>();
+        model_pose_ = std::make_shared<PoseRPY>();
 
     }
 
@@ -66,6 +72,12 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         return *imu_pose_;
+    }
+
+    PoseRPY get_model_states()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return *model_pose_;
     }
 
 private:
@@ -112,17 +124,43 @@ private:
 
         imu_pose_->timestamp = imu_msg->header.stamp.sec + imu_msg->header.stamp.nanosec * 1e-9; 
     }
+
+    void read_model_states(const gazebo_msgs::msg::ModelStates::SharedPtr model_states)
+    {   
+        for (size_t i = 0; i < model_states->name.size(); i++) {
+            if (model_states->name[i] == "latty_chassis") {
+
+                const auto &pose = model_states->pose[i];
+
+                tf2::Quaternion q(
+                    pose.orientation.x,
+                    pose.orientation.y,
+                    pose.orientation.z,
+                    pose.orientation.w
+                );
+
+                tf2::Matrix3x3 m(q);
+
+                std::lock_guard<std::mutex> lock(mutex_);
+                m.getRPY(
+                    imu_pose_->orientation.roll,
+                    imu_pose_->orientation.pitch,
+                    imu_pose_->orientation.yaw
+                );
+            }
+        }
+    }
     
 
     rclcpp::QoS qos_;
     
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
-
-    
+    rclcpp::Subscription<gazebo_msgs::msg::ModelStates>::SharedPtr model_states_sub_;
 
     std::shared_ptr<PoseRPY> odom_pose_;
     std::shared_ptr<PoseRPY> imu_pose_;
+    std::shared_ptr<PoseRPY> model_pose_;
 
     std::mutex mutex_;
 };

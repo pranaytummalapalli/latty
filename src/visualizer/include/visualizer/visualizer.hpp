@@ -32,6 +32,7 @@ private:
         {
             auto odom = state_->get_odom();
             auto imu = state_->get_imu();
+            auto model_states = state_->get_model_states();
 
             if(start_time_ < 0) start_time_ = odom.timestamp;
             double rel_time = odom.timestamp - start_time_;
@@ -39,7 +40,9 @@ private:
             rec_.set_time_seconds("rel_time", rel_time);
             rec_.log("yaw/odom", rerun::Scalars(odom.orientation.yaw));
             rec_.log("yaw/imu", rerun::Scalars(imu.orientation.yaw));
+            rec_.log("yaw/model", rerun::Scalars(model_states.orientation.yaw));
 
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
 
