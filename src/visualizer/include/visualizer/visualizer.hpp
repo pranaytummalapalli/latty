@@ -5,6 +5,13 @@
 #include "visualizer/state_subscriber.hpp"
 #include <thread>
 #include <chrono>
+#include <atomic>
+
+// For fork/exec/kill
+#include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 using namespace rerun::demo;
 
@@ -38,15 +45,16 @@ private:
             double rel_time = odom.timestamp - start_time_;
 
             double deviation = imu.orientation.yaw - model_states.orientation.yaw;
-            RCLCPP_INFO(state_->get_logger(), "Found delta: %.4f", deviation);
+            // RCLCPP_INFO(state_->get_logger(), "Found delta: %.4f", deviation);
             // RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f", model_states.orientation.yaw);
+            RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f, %.4f", imu.orientation.yaw, model_states.orientation.yaw);
 
             rec_.set_time_seconds("rel_time", rel_time);
             rec_.log("yaw/odom", rerun::Scalars(odom.orientation.yaw));
             rec_.log("yaw/imu", rerun::Scalars(imu.orientation.yaw));
             rec_.log("yaw/model", rerun::Scalars(model_states.orientation.yaw));
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
 
 

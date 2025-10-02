@@ -106,25 +106,45 @@ private:
 
     void read_imu(const sensor_msgs::msg::Imu::SharedPtr imu_msg)
     {
-        tf2::Quaternion q(
-            imu_msg->orientation.x,
-            imu_msg->orientation.y,
-            imu_msg->orientation.z,
-            imu_msg->orientation.w
-        );
+        static tf2::Quaternion q_est(0, 0, 0, 1);  // estimated orientation (start at identity)
+        static rclcpp::Time last_time = imu_msg->header.stamp; 
 
-        tf2::Matrix3x3 m(q);
+        // Time delta
+        rclcpp::Time current_time = imu_msg->header.stamp;
+        double dt = (current_time - last_time).seconds();
+        last_time = current_time;
+
+        // Extract angular velocity (rad/s)
+        double wx = imu_msg->angular_velocity.x;
+        double wy = imu_msg->angular_velocity.y;
+        double wz = imu_msg->angular_velocity.z;
+
+        // Small rotation quaternion (Δq ≈ [ω*dt/2, 1])
+        tf2::Quaternion dq;
+        dq.setX(0.5 * wx * dt);
+        dq.setY(0.5 * wy * dt);
+        dq.setZ(0.5 * wz * dt);
+        dq.setW(1.0);
+
+        // Normalize (good practice for quaternions)
+        dq.normalize();
+
+        // Update estimated orientation
+        q_est = q_est * dq;
+        q_est.normalize();
+
+        // Convert to roll, pitch, yaw
+        tf2::Matrix3x3 m(q_est);
 
         std::lock_guard<std::mutex> lock(mutex_);
-         m.getRPY(
+        m.getRPY(
             imu_pose_->orientation.roll,
             imu_pose_->orientation.pitch,
             imu_pose_->orientation.yaw
         );
 
-       
-
-        imu_pose_->timestamp = imu_msg->header.stamp.sec + imu_msg->header.stamp.nanosec * 1e-9; 
+        imu_pose_->timestamp =
+            imu_msg->header.stamp.sec + imu_msg->header.stamp.nanosec * 1e-9;
     }
 
     void read_model_states(const gazebo_msgs::msg::ModelStates::SharedPtr model_states)

@@ -13,8 +13,14 @@ int main(int argc, char** argv)
 
     rclcpp::executors::MultiThreadedExecutor exec;
     exec.add_node(state_sub);
-    exec.spin();
+    
+    try {
+        exec.spin();
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR(state_sub->get_logger(), "Exception: %s", e.what());
+    }
 
+    exec.cancel();
     rclcpp::shutdown();
     return 0;
 }
