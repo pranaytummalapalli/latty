@@ -53,8 +53,12 @@ private:
 
         double v = (r * (wr + wl) * 0.5);
 
-        auto current_time = this->get_clock()->now();
-        double dt = (current_time - last_time_).seconds();
+        rclcpp::Time current_time(joint_states->header.stamp);
+        
+        double dt = (last_time_.nanoseconds() > 0)
+                  ? (current_time - last_time_).seconds()
+                  : 0.0;
+
         last_time_ = current_time;
 
         double theta_dot = (v / L) * tan(delta);
