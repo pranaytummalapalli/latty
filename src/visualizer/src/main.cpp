@@ -1,18 +1,20 @@
-#include <rerun.hpp>
-#include <rerun/demo_utils.hpp>
-
 #include "rclcpp/rclcpp.hpp"
+#include "visualizer/state_subscriber.hpp"
+#include "visualizer/visualizer.hpp"
 
 using namespace rerun::demo;
 
-int main()
-{
-    const auto rec = rerun::RecordingStream("rerun_example_cpp");
+int main(int argc, char** argv)
+{   
+    rclcpp::init(argc, argv);
 
-    rec.spawn().exit_on_failure();
+    auto state_sub = std::make_shared<StateSubscriber>();
+    auto visualizer = std::make_shared<Visualizer>(state_sub);
 
-    std::vector<rerun::Position3D> points = grid3d<rerun::Position3D, float>(-10.0f, 10.0f, 10);
-    std::vector<rerun::Color> colors = grid3d<rerun::Color, uint8_t>(0, 255, 10);
+    rclcpp::executors::MultiThreadedExecutor exec;
+    exec.add_node(state_sub);
+    exec.spin();
 
-    rec.log("my_points", rerun::Points3D(points).with_colors(colors).with_radii({0.5f}));
+    rclcpp::shutdown();
+    return 0;
 }

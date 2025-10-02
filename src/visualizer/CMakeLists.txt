@@ -12,6 +12,10 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 
 
@@ -21,6 +25,10 @@ add_executable(visualizer
 ament_target_dependencies(visualizer
   rclcpp
   nav_msgs
+  sensor_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
   )
 
 target_include_directories(visualizer PUBLIC
