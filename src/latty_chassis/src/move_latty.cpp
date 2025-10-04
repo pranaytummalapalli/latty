@@ -19,32 +19,15 @@ MoveLatty::MoveLatty()
     knuckle_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
                                 (front_steer_topic, qos_);
 
-    if(knuckle_pub_ == nullptr) {
-        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", front_steer_topic.c_str());
-        return;
-    }
-
     left_wheel_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
                                 (left_wheel_vel_topic, qos_);
-
-    if(left_wheel_pub_ == nullptr) {
-        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", left_wheel_vel_topic.c_str());
-    }
 
     right_wheel_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
                                 (right_wheel_vel_topic, qos_);
 
-    if(right_wheel_pub_ == nullptr) {
-        RCLCPP_ERROR(this->get_logger(), "Failed to create %s publisher!", right_wheel_vel_topic.c_str());
-    }
-
     control_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>
                             (control_topic, qos_,
                             std::bind(&MoveLatty::populate_control, this, std::placeholders::_1));
-    
-    if(control_sub_ == nullptr) {
-        RCLCPP_ERROR(this->get_logger(), "Failed to create control subscriber!");
-    }
 
     // Timer to move the robot every 100ms
     timer_ = this->create_wall_timer(50ms, std::bind(&MoveLatty::move_latty, this));

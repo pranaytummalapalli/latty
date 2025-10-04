@@ -19,7 +19,7 @@ public:
                         "/joint_states", 10,
                         std::bind(&Odom::calculate_odom, this, std::placeholders::_1));
         
-        odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/latty_odom", 10);
+        odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom/wheel", 10);
 
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 

@@ -17,6 +17,7 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 
 # Build executable
@@ -26,6 +27,8 @@ add_executable(move_latty
   )
 
 add_executable(latty_odom src/odom.cpp)
+
+add_executable(imu_euler src/imu_euler_publisher.cpp)
 
 ament_target_dependencies(move_latty 
   rclcpp
@@ -44,6 +47,13 @@ ament_target_dependencies(latty_odom
   tf2_geometry_msgs
   )
 
+ament_target_dependencies(imu_euler
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  Eigen3
+  )
+
 # Include headers
 target_include_directories(move_latty PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -55,10 +65,16 @@ target_include_directories(latty_odom PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
+target_include_directories(imu_euler PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
 # Install targets
 install(TARGETS
   move_latty
   latty_odom
+  imu_euler
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/
