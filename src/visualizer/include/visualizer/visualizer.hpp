@@ -39,20 +39,22 @@ private:
         {
             auto odom = state_->get_odom();
             auto imu = state_->get_imu();
+            auto imu_euler = state_->get_imu_euler();
             auto model_states = state_->get_model_states();
 
-            if(start_time_ < 0) start_time_ = odom.timestamp;
-            double rel_time = odom.timestamp - start_time_;
+            if(start_time_ < 0) start_time_ = odom->timestamp;
+            double rel_time = odom->timestamp - start_time_;
 
-            double deviation = imu.orientation.yaw - model_states.orientation.yaw;
+            double deviation = imu->pose.q_rpy.y() - model_states->pose.q_rpy.y();
             // RCLCPP_INFO(state_->get_logger(), "Found delta: %.4f", deviation);
-            // RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f", model_states.orientation.yaw);
-            // RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f, %.4f", imu.orientation.yaw, model_states.orientation.yaw);
+            // RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f", model_states.q_rpy.y());
+            // RCLCPP_INFO(state_->get_logger(), "Found model pose: %.4f, %.4f", imu.q_rpy.y(), model_states.q_rpy.y());
 
             rec_.set_time_seconds("rel_time", rel_time);
-            rec_.log("yaw/odom", rerun::Scalars(odom.orientation.yaw));
-            rec_.log("yaw/imu", rerun::Scalars(imu.orientation.yaw));
-            rec_.log("yaw/model", rerun::Scalars(model_states.orientation.yaw));
+            rec_.log("yaw/odom", rerun::Scalars(odom->pose.q_rpy.y()));
+            rec_.log("yaw/imu_raw", rerun::Scalars(imu->pose.q_rpy.y()));
+            rec_.log("yaw/imu_euler", rerun::Scalars(imu_euler->pose.q_rpy.y()));
+            rec_.log("yaw/model", rerun::Scalars(model_states->pose.q_rpy.y()));
             rec_.log("yaw/dev_mo", rerun::Scalars(deviation));
 
             std::this_thread::sleep_for(std::chrono::milliseconds(20));

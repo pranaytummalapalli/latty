@@ -91,6 +91,7 @@ IMUState IMUPublisher::integrate_euler_(const IMUState& state,
     
     next_state.twist.linear = state.twist.linear + (R_w_b * a_b - g) * dt;
     next_state.pose.position = state.pose.position + next_state.twist.linear * dt;
+    next_state.twist.angular = state.twist.angular;
 
     return next_state;
 }
