@@ -4,6 +4,7 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include <Eigen/Dense>
+#include <utility>
 
 struct IMUState
 {
@@ -26,10 +27,15 @@ public:
 
 private:
     void integrate_sensor_(const sensor_msgs::msg::Imu::SharedPtr imu_msg);
-    IMUState integrate_euler_(const IMUState& state,
+    IMUState integrate_exp_map_(const IMUState& state,
                               const Eigen::Vector3d& w_b,
                               const Eigen::Vector3d& a_b,
                               double dt);
+
+    std::pair<Eigen::Vector3d, Eigen::Vector3d> lowpass_filter_( 
+                            const Eigen::Vector3d& w_b,
+                            const Eigen::Vector3d& a_b,
+                            double dt);
 
     // IMUState lowpass_filter(const IMUState& state);
 
@@ -42,6 +48,14 @@ private:
     rclcpp::Time last_time_;
 
     IMUState state_;
+    Eigen::Vector3d last_filtered_w_;
+    Eigen::Vector3d last_filtered_a_;
+
+    //drift bias correction
+    Eigen::Vector3d gyro_bias_{Eigen::Vector3d::Zero()};
+    bool bias_calib_done_{false};
+    int calib_count_{0};
+    Eigen::Vector3d gyro_acc_{Eigen::Vector3d::Zero()};
 };
 
 

@@ -1,4 +1,4 @@
-#include "latty_chassis/imu_publisher.hpp"
+#include "latty_chassis/experimentation/imu_publisher.hpp"
 
 using namespace std::chrono_literals;
 
@@ -18,6 +18,9 @@ IMUPublisher::IMUPublisher() : Node("Sensors_IMU_Euler"), first_msg_(false), las
     state_.pose.position.setZero();
     state_.twist.linear.setZero();
     state_.twist.angular.setZero();
+
+    last_filtered_w_.setZero();
+    last_filtered_a_.setZero();
 }
 
 void IMUPublisher::integrate_sensor_(const sensor_msgs::msg::Imu::SharedPtr imu_msg)
@@ -41,6 +44,11 @@ void IMUPublisher::integrate_sensor_(const sensor_msgs::msg::Imu::SharedPtr imu_
     }
 
     double dt = (now - last_time_).seconds();
+
+    auto filtered = lowpass_filer_(w, a, dt);
+
+    w = filtered.first;
+    a = filtered.second;
 
     state_ = integrate_euler_(state_, w, a, dt);
 
@@ -94,6 +102,31 @@ IMUState IMUPublisher::integrate_euler_(const IMUState& state,
     next_state.twist.angular = state.twist.angular;
 
     return next_state;
+}
+
+std::pair<Eigen::Vector3d, Eigen::Vector3d> IMUPublisher::lowpass_filer_(
+                        const Eigen::Vector3d& w_b,
+                        const Eigen::Vector3d& a_b,
+                        double dt)
+{
+    
+    double fc = 5.0; //filter cutoff
+    double RC = 1 / (2.0 * M_PI * fc);
+
+    double alpha = dt / (RC + dt);
+
+    if (dt <= 1e-6) {
+        return {last_filtered_w_, last_filtered_a_};
+    }
+
+    Eigen::Vector3d filtered_w = alpha * w_b + (1 - alpha) * last_filtered_w_;
+    Eigen::Vector3d filtered_a = alpha * a_b + (1 - alpha) * last_filtered_a_;
+
+
+    last_filtered_w_ = filtered_w;
+    last_filtered_a_ = filtered_a;
+
+    return {filtered_w, filtered_a};
 }
 
 int main(int argc, char** argv)

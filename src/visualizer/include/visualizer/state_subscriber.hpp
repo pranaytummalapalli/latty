@@ -51,6 +51,7 @@ public:
     std::shared_ptr<const StateRPY> get_odom();
     std::shared_ptr<const StateRPY> get_imu();
     std::shared_ptr<const StateRPY> get_imu_euler();
+    std::shared_ptr<const StateRPY> get_imu_expm();
     std::shared_ptr<const StateRPY> get_model_states();
 
 private:
@@ -58,6 +59,7 @@ private:
     void read_odom_(const nav_msgs::msg::Odometry::SharedPtr odom_msg);
     void read_raw_imu_(const sensor_msgs::msg::Imu::SharedPtr imu_msg);
     void read_imu_euler_(const nav_msgs::msg::Odometry::SharedPtr imu_msg);
+    void read_imu_expm_(const nav_msgs::msg::Odometry::SharedPtr imu_msg);
     void read_model_states_(const gazebo_msgs::msg::ModelStates::SharedPtr model_states);
 
 
@@ -75,11 +77,13 @@ private:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr imu_euler_sub_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr imu_expm_sub_;
     rclcpp::Subscription<gazebo_msgs::msg::ModelStates>::SharedPtr model_states_sub_;
 
     std::shared_ptr<StateRPY> odom_pose_;
     std::shared_ptr<StateRPY> imu_pose_;
     std::shared_ptr<StateRPY> imu_euler_pose_;
+    std::shared_ptr<StateRPY> imu_expm_pose_;
     std::shared_ptr<StateRPY> model_pose_;
 
     tf2::Quaternion q_;

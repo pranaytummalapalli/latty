@@ -28,7 +28,9 @@ add_executable(move_latty
 
 add_executable(latty_odom src/odom.cpp)
 
-add_executable(imu_euler src/imu_euler_publisher.cpp)
+add_executable(imu_euler src/experimentation/imu_euler_publisher.cpp)
+
+add_executable(imu_expm src/experimentation/imu_expm_publisher.cpp)
 
 ament_target_dependencies(move_latty 
   rclcpp
@@ -54,6 +56,13 @@ ament_target_dependencies(imu_euler
   Eigen3
   )
 
+ament_target_dependencies(imu_expm
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  Eigen3
+  )
+
 # Include headers
 target_include_directories(move_latty PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -70,11 +79,17 @@ target_include_directories(imu_euler PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
+target_include_directories(imu_expm PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
 # Install targets
 install(TARGETS
   move_latty
   latty_odom
   imu_euler
+  imu_expm
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/

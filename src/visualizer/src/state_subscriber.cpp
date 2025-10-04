@@ -19,6 +19,10 @@ StateSubscriber::StateSubscriber() : Node("Visualizer"),
                         "/odom/imu/euler", qos_,
                         std::bind(&StateSubscriber::read_imu_euler_, this, std::placeholders::_1));
 
+    imu_expm_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+                        "/odom/imu/expm", qos_,
+                        std::bind(&StateSubscriber::read_imu_expm_, this, std::placeholders::_1));
+
     model_states_sub_ = this->create_subscription<gazebo_msgs::msg::ModelStates>(
                         "/gazebo/model_states", qos_,
                         std::bind(&StateSubscriber::read_model_states_, this, std::placeholders::_1));
@@ -26,6 +30,7 @@ StateSubscriber::StateSubscriber() : Node("Visualizer"),
     odom_pose_ = std::make_shared<StateRPY>();
     imu_pose_  = std::make_shared<StateRPY>();
     imu_euler_pose_ = std::make_shared<StateRPY>();
+    imu_expm_pose_ = std::make_shared<StateRPY>();
     model_pose_ = std::make_shared<StateRPY>();
     
     first_msg_ = true;
@@ -44,6 +49,11 @@ StateSubscriber::StateSubscriber() : Node("Visualizer"),
     imu_euler_pose_->pose.position.setZero();
     imu_euler_pose_->twist.linear.setZero();
     imu_euler_pose_->twist.angular.setZero();
+
+    imu_expm_pose_->pose.q_rpy.setZero();
+    imu_expm_pose_->pose.position.setZero();
+    imu_expm_pose_->twist.linear.setZero();
+    imu_expm_pose_->twist.angular.setZero();
 
     model_pose_->pose.q_rpy.setZero();
     model_pose_->pose.position.setZero();
@@ -196,6 +206,45 @@ void StateSubscriber::read_imu_euler_(const nav_msgs::msg::Odometry::SharedPtr i
     }
 }
 
+void StateSubscriber::read_imu_expm_(const nav_msgs::msg::Odometry::SharedPtr imu_msg)
+{
+    tf2::Quaternion q(
+        imu_msg->pose.pose.orientation.x,
+        imu_msg->pose.pose.orientation.y,
+        imu_msg->pose.pose.orientation.z,
+        imu_msg->pose.pose.orientation.w
+    );
+
+    tf2::Matrix3x3 m(q);
+
+    auto new_state = std::make_shared<StateRPY>();
+
+    m.getRPY(
+        new_state->pose.q_rpy.r(),
+        new_state->pose.q_rpy.p(),
+        new_state->pose.q_rpy.y()
+    );
+
+    new_state->pose.position.x() = imu_msg->pose.pose.position.x;
+    new_state->pose.position.y() = imu_msg->pose.pose.position.y;
+    new_state->pose.position.z() = imu_msg->pose.pose.position.z;
+
+    new_state->twist.linear.x() = imu_msg->twist.twist.linear.x;
+    new_state->twist.linear.y() = imu_msg->twist.twist.linear.y;
+    new_state->twist.linear.z() = imu_msg->twist.twist.linear.z;
+
+    new_state->twist.angular.x() = imu_msg->twist.twist.angular.x;
+    new_state->twist.angular.y() = imu_msg->twist.twist.angular.y;
+    new_state->twist.angular.z() = imu_msg->twist.twist.angular.z;
+
+    new_state->timestamp = imu_msg->header.stamp.sec + imu_msg->header.stamp.nanosec * 1e-9; 
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        imu_expm_pose_ = new_state;
+    }
+}
+
 void StateSubscriber::read_model_states_(const gazebo_msgs::msg::ModelStates::SharedPtr model_states)
 {   
     for (size_t i = 0; i < model_states->name.size(); i++) {
@@ -242,6 +291,12 @@ std::shared_ptr<const StateRPY> StateSubscriber::get_imu_euler()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return imu_euler_pose_;
+}
+
+std::shared_ptr<const StateRPY> StateSubscriber::get_imu_expm() 
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return imu_expm_pose_;
 }
 
 std::shared_ptr<const StateRPY> StateSubscriber::get_model_states()
