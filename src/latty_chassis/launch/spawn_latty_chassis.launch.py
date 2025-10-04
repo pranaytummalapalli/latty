@@ -171,6 +171,22 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}]
     )
 
+    imu_euler_node = Node(
+        package="latty_chassis",
+        executable="imu_euler",
+        name="Sensors_IMU_Euler",
+        output="screen",
+        parameters=[{"use_sim_time": True}]
+    )
+
+    imu_expm_node = Node(
+        package="latty_chassis",
+        executable="imu_expm",
+        name="Sensors_IMU_ExpM",
+        output="screen",
+        parameters=[{"use_sim_time": True}, {"cutoff_frequency": 1.0}, {"calib_samples": 5000}]
+    )
+
     return LaunchDescription([
     rsp_node,
     gzserver,
@@ -203,7 +219,7 @@ def generate_launch_description():
     RegisterEventHandler(
         OnProcessExit(
             target_action=load_left_wheel_velocity_controller,
-            on_exit=[latty_chassis_node, rviz_node, latty_odom_node],
+            on_exit=[latty_chassis_node, latty_odom_node, imu_euler_node, imu_expm_node],
         )
     ),
 ])

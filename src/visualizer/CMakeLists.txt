@@ -21,6 +21,7 @@ find_package(gazebo_msgs REQUIRED)
 
 
 add_executable(visualizer
+  src/state_subscriber.cpp
   src/main.cpp)
 
 ament_target_dependencies(visualizer

@@ -152,7 +152,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /latty_odom
+        Value: /odom/wheel
       Value: true
   Enabled: true
   Global Options:
