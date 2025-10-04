@@ -203,7 +203,7 @@ def generate_launch_description():
     RegisterEventHandler(
         OnProcessExit(
             target_action=load_left_wheel_velocity_controller,
-            on_exit=[latty_chassis_node,  latty_odom_node],
+            on_exit=[latty_chassis_node, rviz_node, latty_odom_node],
         )
     ),
 ])

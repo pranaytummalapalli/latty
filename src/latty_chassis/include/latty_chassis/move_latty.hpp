@@ -8,6 +8,8 @@
 #include "rclcpp/qos.hpp"
 #include "topic_names.hpp"
 
+#include <cmath>
+
 class MoveLatty : public rclcpp::Node
 {
 public:
@@ -18,11 +20,14 @@ private:
     void populate_control(const std_msgs::msg::Float64MultiArray::SharedPtr control_msg);
     void joint_states_remap(const sensor_msgs::msg::JointState::SharedPtr joint_states);
     
-    double steer_angle_rad = 0.0;
-    double left_wheel_vel_rps = 0.0;    
-    double right_wheel_vel_rps = 0.0;
+    double delta = 0.0;
+    double yaw_rate = 0.0;
+    double theta_dot_l = 0.0;    
+    double theta_dot_r = 0.0;
 
     const double wheelradius = 0.1;
+    const double track_width = 0.26;
+    const double wheelbase = 0.25;
 
     rclcpp::QoS qos_;
     rclcpp::TimerBase::SharedPtr timer_;
@@ -30,9 +35,10 @@ private:
     rclcpp::Time last_time_;
     std::unordered_map<std::string, double> last_pos_;
 
-    std_msgs::msg::Float64MultiArray steer_angle_rad_;
-    std_msgs::msg::Float64MultiArray left_wheel_vel_rps_;
-    std_msgs::msg::Float64MultiArray right_wheel_vel_rps_;
+    std_msgs::msg::Float64MultiArray delta_;
+    std_msgs::msg::Float64MultiArray theta_dot_l_;
+    std_msgs::msg::Float64MultiArray theta_dot_r_;
+    double icr_;
 
     sensor_msgs::msg::JointState joint_states_;
     sensor_msgs::msg::JointState joint_states_pos_;

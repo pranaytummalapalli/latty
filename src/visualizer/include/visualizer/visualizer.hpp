@@ -53,6 +53,7 @@ private:
             rec_.log("yaw/odom", rerun::Scalars(odom.orientation.yaw));
             rec_.log("yaw/imu", rerun::Scalars(imu.orientation.yaw));
             rec_.log("yaw/model", rerun::Scalars(model_states.orientation.yaw));
+            rec_.log("yaw/dev_mo", rerun::Scalars(deviation));
 
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
