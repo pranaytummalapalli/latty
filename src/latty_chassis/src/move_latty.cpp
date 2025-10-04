@@ -12,9 +12,9 @@ MoveLatty::MoveLatty()
 {
     this->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
-    steer_angle_rad_.data.resize(1);
-    left_wheel_vel_rps_.data.resize(1);
-    right_wheel_vel_rps_.data.resize(1);
+    delta_.data.resize(1);
+    theta_dot_l_.data.resize(1);
+    theta_dot_r_.data.resize(1);
 
     knuckle_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
                                 (front_steer_topic, qos_);
@@ -54,24 +54,35 @@ void MoveLatty::populate_control(const std_msgs::msg::Float64MultiArray::SharedP
 {   
     if(control_msg->data.size() >= 2)
     {   
-        
-        double latty_velocity = control_msg->data[0];
-        if(latty_velocity > 0.3) latty_velocity = 0.3;
-        if(latty_velocity < -0.3) latty_velocity = -0.3;
+        double v_com = control_msg->data[0];
+        delta = control_msg->data[1];
+        if(v_com > 0.3) v_com = 0.3;
+        if(v_com < -0.3) v_com = -0.3;
 
-        steer_angle_rad = control_msg->data[1];
-        right_wheel_vel_rps = latty_velocity / wheelradius;
-        left_wheel_vel_rps = latty_velocity / wheelradius;
+        double vl, vr;
+
+        if (std::abs(std::tan(delta)) < 1e-6) {
+            vl = v_com;
+            vr = v_com;
+        } else {
+            double icr   = wheelbase / std::tan(delta);           
+            double yaw_rate = (v_com * std::tan(delta)) / wheelbase;   
+            vl = yaw_rate * (icr + track_width / 2.0);
+            vr = yaw_rate * (icr - track_width / 2.0);
+        }
+
+        theta_dot_l = vl / wheelradius;
+        theta_dot_r = vr / wheelradius;
     }
 }
 
 void MoveLatty::move_latty()
 {
-    steer_angle_rad_.data[0] = steer_angle_rad;
-    left_wheel_vel_rps_.data[0] = left_wheel_vel_rps;
-    right_wheel_vel_rps_.data[0] = right_wheel_vel_rps;
+    delta_.data[0] = delta;
+    theta_dot_l_.data[0] = theta_dot_l;
+    theta_dot_r_.data[0] = theta_dot_r;
 
-    knuckle_pub_->publish(steer_angle_rad_);
-    left_wheel_pub_->publish(left_wheel_vel_rps_);
-    right_wheel_pub_->publish(right_wheel_vel_rps_);
+    knuckle_pub_->publish(delta_);
+    left_wheel_pub_->publish(theta_dot_l_);
+    right_wheel_pub_->publish(theta_dot_r_);
 }

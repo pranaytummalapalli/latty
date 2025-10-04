@@ -35,9 +35,9 @@ private:
         auto now = this->get_clock()->now();
         double t = (now - start_time_).seconds();
 
-        double amplitude = 0.785;
-        double f = 0.3;
-        double offset = 0.05;
+        double amplitude = 0.5236;
+        double f = 0.1;
+        double offset = 0.00;
 
         double delta = amplitude * std::sin(2.0 * M_PI * f * t) - offset;
 
@@ -48,7 +48,7 @@ private:
         sine_pub_->publish(sine_control_);
     }
 
-    double velocity = 0.2;
+    double velocity = 0.1;
 
     rclcpp::QoS qos_;
     rclcpp::TimerBase::SharedPtr timer_;

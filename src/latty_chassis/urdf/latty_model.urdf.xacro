@@ -4,7 +4,7 @@
   <!-- Parameters -->
   <xacro:property name="wheel_radius" value="0.1"/>
   <xacro:property name="wheel_length" value="0.06"/>
-  <xacro:property name="front_wheel_radius" value="0.03"/>
+  <xacro:property name="front_wheel_radius" value="0.02"/>
   <xacro:property name="front_wheel_length" value="0.02"/>
   <xacro:property name="wheelbase" value="0.25"/>
 
@@ -132,12 +132,12 @@
   </link>
 
   <link name="right_wheel">
-    
+
     <inertial>
       <mass value="5.0"/>
       <inertia ixx="0.0143" iyy="0.0143" izz="0.025" ixy="0.0" ixz="0.0" iyz="0.0"/>
     </inertial>
-    
+
     <visual>
       <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
       <geometry>
@@ -156,7 +156,7 @@
 
   <!-- IMU -->
   <link name="imu_link">
-    
+
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -165,7 +165,7 @@
     </collision>
 
     <inertial>
-      <origin xyz="0 0 0"  rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <mass value="0.01"/>
       <inertia ixx="1e-6" iyy="1e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
     </inertial>
@@ -177,26 +177,36 @@
       </geometry>
     </visual>
   </link>
-  
+
 
   <!-- Gazebo material overrides -->
   <gazebo reference="chassis">
     <material>Gazebo/Yellow</material>
   </gazebo>
 
+  <xacro:property name="frontWheel_mu1" value="0.5"/>
+  <xacro:property name="frontWheel_mu2" value="0.1"/>
+  <xacro:property name="rearWheel_mu1" value="1.0"/>
+  <xacro:property name="rearWheel_mu2" value="0.5"/>
+  <xacro:property name="fdir1_q" value="0 0 1"/>
+
+
   <gazebo reference="left_wheel">
     <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
+    <!-- make lateral (mu1) big, longitudinal (mu2) moderate -->
+    <fdir1>${fdir1_q}</fdir1>
+    <mu1>${rearWheel_mu1}</mu1>    <!-- lateral -->
+    <mu2>${rearWheel_mu2}</mu2>    <!-- longitudinal -->
+    <kp>1e6</kp>
     <kd>1.0</kd>
   </gazebo>
 
   <gazebo reference="right_wheel">
     <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>  
+    <fdir1>${fdir1_q}</fdir1>
+    <mu1>${rearWheel_mu1}</mu1>    <!-- lateral -->
+    <mu2>${rearWheel_mu2}</mu2>    <!-- longitudinal -->
+    <kp>1e6</kp>
     <kd>1.0</kd>
   </gazebo>
 
@@ -208,17 +218,19 @@
 
   <gazebo reference="front_left_wheel">
     <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
+    <fdir1>${fdir1_q}</fdir1>
+    <mu1>${frontWheel_mu1}</mu1>    <!-- lateral -->
+    <mu2>${frontWheel_mu2}</mu2>    <!-- longitudinal -->
+    <kp>1e6</kp>
     <kd>1.0</kd>
   </gazebo>
 
   <gazebo reference="front_right_wheel">
     <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
+    <fdir1>${fdir1_q}</fdir1>
+    <mu1>${frontWheel_mu1}</mu1>    <!-- lateral -->
+    <mu2>${frontWheel_mu2}</mu2>    <!-- longitudinal -->
+    <kp>1e6</kp>
     <kd>1.0</kd>
   </gazebo>
 
@@ -246,7 +258,7 @@
     <child link="steer_knuckle"/>
     <origin xyz="-0.15 0 0.03" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-0.785" upper="0.785" effort="10" velocity="3"/>
+    <limit lower="-0.5236" upper="0.5236" effort="10" velocity="3"/>
     <dynamics damping="0.5"/>
   </joint>
 
@@ -254,7 +266,7 @@
   <joint name="front_left_wheel_joint" type="continuous">
     <parent link="steer_knuckle"/>
     <child link="front_left_wheel"/>
-    <origin xyz="0 0.02 -0.015" rpy="0 0 0"/>
+    <origin xyz="0 0.02 -0.01" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <dynamics damping="0.1" friction="0.05"/>
   </joint>
@@ -262,7 +274,7 @@
   <joint name="front_right_wheel_joint" type="continuous">
     <parent link="steer_knuckle"/>
     <child link="front_right_wheel"/>
-    <origin xyz="0 -0.02 -0.015" rpy="0 0 0"/>
+    <origin xyz="0 -0.02 -0.01" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <dynamics damping="0.1" friction="0.05"/>
   </joint>
@@ -271,7 +283,7 @@
   <joint name="left_wheel_joint" type="continuous">
     <parent link="chassis"/>
     <child link="left_wheel"/>
-    <origin xyz="0.1 0.13 0.085" rpy="0 0 0"/>
+    <origin xyz="0.1 0.13 ${wheel_radius}" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <dynamics damping="5.0" friction="0.5"/>
   </joint>
@@ -279,7 +291,7 @@
   <joint name="right_wheel_joint" type="continuous">
     <parent link="chassis"/>
     <child link="right_wheel"/>
-    <origin xyz="0.1 -0.13 0.085" rpy="0 0 0"/>
+    <origin xyz="0.1 -0.13 ${wheel_radius}" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <dynamics damping="5.0" friction="0.5"/>
   </joint>
@@ -318,8 +330,8 @@
     </joint>
   </ros2_control>
 
-  <xacro:property name="noise" value="0.1"/>
-  <xacro:property name="drift" value="1e-5"/>
+  <xacro:property name="noise" value="0.005"/>
+  <xacro:property name="drift" value="1e-6"/>
 
   <gazebo>
     <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
@@ -330,7 +342,7 @@
   <gazebo reference="imu_link">
     <sensor name="imu_sensor" type="imu">
       <always_on>true</always_on>
-      <update_rate>100.0</update_rate>   <!-- 100 Hz IMU -->
+      <update_rate>100.0</update_rate>      <!-- 100 Hz IMU -->
       <visualize>true</visualize>
 
       <imu>
@@ -339,9 +351,9 @@
           <x>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>${noise}</stddev>        <!-- noise strength -->
+              <stddev>${noise}</stddev>              <!-- noise strength -->
               <bias_mean>0.0</bias_mean>
-              <bias_stddev>${drift}</bias_stddev> <!-- slow drift -->
+              <bias_stddev>${drift}</bias_stddev>              <!-- slow drift -->
             </noise>
           </x>
           <y>
@@ -367,7 +379,7 @@
           <x>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>${noise}</stddev>         <!-- higher noise -->
+              <stddev>${noise}</stddev>              <!-- higher noise -->
               <bias_mean>0.0</bias_mean>
               <bias_stddev>${drift}</bias_stddev>
             </noise>
