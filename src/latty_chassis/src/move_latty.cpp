@@ -16,6 +16,8 @@ MoveLatty::MoveLatty()
     theta_dot_l_.data.resize(1);
     theta_dot_r_.data.resize(1);
 
+    v_com = 0.0;
+
     knuckle_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>
                                 (front_steer_topic, qos_);
 
@@ -37,7 +39,7 @@ void MoveLatty::populate_control(const std_msgs::msg::Float64MultiArray::SharedP
 {   
     if(control_msg->data.size() >= 2)
     {   
-        double v_com = control_msg->data[0];
+        v_com = control_msg->data[0];
         delta = control_msg->data[1];
         if(v_com > 0.3) v_com = 0.3;
         if(v_com < -0.3) v_com = -0.3;
