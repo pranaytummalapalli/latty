@@ -19,6 +19,8 @@ private:
     void move_latty();
     void populate_control(const std_msgs::msg::Float64MultiArray::SharedPtr control_msg);
     void joint_states_remap(const sensor_msgs::msg::JointState::SharedPtr joint_states);
+
+    double v_com;
     
     double delta = 0.0;
     double yaw_rate = 0.0;
