@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(visualizer)
+project(commons)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,51 +10,22 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(gazebo_msgs REQUIRED)
-find_package(commons REQUIRED)
 
-add_executable(visualizer
-  src/state_subscriber.cpp
-  src/main.cpp)
+add_library(${PROJECT_NAME} INTERFACE)
 
-ament_target_dependencies(visualizer
-  rclcpp
-  nav_msgs
-  sensor_msgs
-  tf2
-  tf2_geometry_msgs
-  tf2_ros
-  gazebo_msgs
-  commons
-  )
-
-target_include_directories(visualizer PUBLIC
+target_include_directories(${PROJECT_NAME} INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  )
+  $<INSTALL_INTERFACE:include>)
 
-include(FetchContent)
-FetchContent_Declare(rerun_sdk URL
-  https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
-FetchContent_MakeAvailable(rerun_sdk)
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
-target_link_libraries(visualizer rerun_sdk)
-
-install(TARGETS
-  visualizer
-  DESTINATION lib/${PROJECT_NAME})
-
-install(DIRECTORY include/
-  DESTINATION include/
-  )
-
+ament_export_include_directories(include)
+ament_export_dependencies()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
