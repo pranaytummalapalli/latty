@@ -3,7 +3,7 @@
 <package format="3">
   <name>commons</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Utils: Geometry, Statistics etc.</description>
   <maintainer email="pranayrao12@gmail.com">pranayt</maintainer>
   <license>TODO: License declaration</license>
 

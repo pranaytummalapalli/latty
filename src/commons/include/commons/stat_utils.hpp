@@ -4,8 +4,7 @@
 #include <algorithm>
 #include <deque>
 
-namespace stats_util {
-
+namespace statistics {
 namespace rmse {
 
 struct RMSEOfflineBatch 
@@ -132,6 +131,5 @@ struct RMSEOnlineTime
     }
 };
 
-}; //stats_utils::rmse
-
-}; //stats_util
+}; //statistics::rmse
+}; //statistics

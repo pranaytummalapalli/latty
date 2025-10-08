@@ -17,8 +17,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(gazebo_msgs REQUIRED)
-
-
+find_package(commons REQUIRED)
 
 add_executable(visualizer
   src/state_subscriber.cpp
@@ -32,6 +31,7 @@ ament_target_dependencies(visualizer
   tf2_geometry_msgs
   tf2_ros
   gazebo_msgs
+  commons
   )
 
 target_include_directories(visualizer PUBLIC
