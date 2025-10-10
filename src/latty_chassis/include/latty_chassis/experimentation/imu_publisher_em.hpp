@@ -3,22 +3,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "commons/geometry_utils.hpp"
+
 #include <Eigen/Dense>
 #include <utility>
 
-struct IMUState
-{
-    struct pose
-    {
-        Eigen::Vector3d position;
-        Eigen::Quaterniond orientation;
-    } pose;
-    struct twist
-    {
-        Eigen::Vector3d linear;
-        Eigen::Vector3d angular;
-    } twist; 
-};
 
 class IMUPublisher : public rclcpp::Node
 {

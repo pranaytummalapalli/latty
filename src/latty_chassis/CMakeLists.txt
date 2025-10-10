@@ -18,6 +18,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(commmons REQUIRED)
 
 
 # Build executable
@@ -61,6 +62,7 @@ ament_target_dependencies(imu_expm
   sensor_msgs
   nav_msgs
   Eigen3
+  commons
   )
 
 # Include headers
